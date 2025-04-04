@@ -7,54 +7,49 @@ from Filters import *
 from Data_loader import Pic_loader
 from Pre_processing import standard_pre
 from Canny_visualizer import cannyEdge_visual
+from circle_finder import circles_finder
+from video_maker import video_maker
 
 # using the Pic_loader function to return the path
 root = os.getcwd()
-imgPath = os.path.join(root, './Exp_pics/220C_reference.bmp')
-img = cv.imread(imgPath)
+ref_img_path = os.path.join(root, './Exp_pics/220C_reference.bmp')
+work_img_path = os.path.join(root, './Exp_pics/220C_4bar.bmp')
+
+ref_img = cv.imread(ref_img_path)
+work_img = cv.imread(work_img_path)
 
 # plt.imshow(img)
 # plt.show()
 
 # standard pre-processing applied
-img = standard_pre(img,1)
+ref_img = standard_pre(ref_img,1)
+work_img = standard_pre(work_img,1)
 
-# plotting for debugging
-# plt.imshow(img, cmap='gray')
+# plt.subplot(1,2,1)
+# plt.imshow(ref_img)
+# plt.subplot(1,2,2)
+# plt.imshow(work_img)
 # plt.show()
 
+crosses_reference = np.array(circles_finder(ref_img,11, 850, 900))
+crosses_work = np.array(circles_finder(work_img,11, 860, 910))
 
-band_filtered_image = bandpass_filter(img,20,180)
-#
-# # #plotting for debugging
-# plt.imshow(band_filtered_image,cmap='gray')
-# plt.show()
+# print(crosses_reference)
+# print(crosses_work)
 
-# img_sub = Blur_subtraction(img,99)
+difference = crosses_reference.astype(np.int16) - crosses_work.astype(np.int16)
 
-# plt.imshow(img_sub,cmap='gray')
-# plt.show()
+if np.all(difference[0, :] == difference[1, :]):
+    print("Rows are identical: good :)")
+else:
+    print("Rows are different: there might be an error :(")
 
-# canny edge visualizer is used to tune the values
-# thanks to the trackbar, it is easy to visualize the effect of the limiting values
 
-# cannyEdge_visual(img_sub)
+work_img = work_img[4:,:]
+ref_img = ref_img[:-4,:]
 
-# min and max treshold are based on the visual version of Canny edge
-# edges = cv.Canny(band_filtered_image,100,255)
-#
-# plt.imshow(edges)
-# plt.show()
+# cv.imwrite('220C_4bar_corrected.bmp', work_img)
+# cv.imwrite('220C_ref_corrected.bmp', ref_img)
 
-circles = cv.HoughCircles(band_filtered_image,cv.HOUGH_GRADIENT,1,200,param1=255,param2=100,minRadius=40,maxRadius=160)
-circles = np.uint16(np.around(circles))
+BOS_video = video_maker(ref_img,work_img)
 
-for i in circles[0, :]:
-    # draw the outer circle
-    cv.circle (img, (i[0], i[1]), i[2], (0, 255, 0), 2)
-    # draw the center of the circle
-    cv.circle (img, (i[0], i[1]), 2, (0, 0, 255), 3)
-
-cv.imshow ('detected circles', img)
-cv.waitKey (0)
-cv.destroyAllWindows ()
