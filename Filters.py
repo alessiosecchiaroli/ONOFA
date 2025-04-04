@@ -32,3 +32,11 @@ def bandpass_filter(image,low_cutoff, high_cutoff):
     # plt.show ()
 
     return cv.normalize(img_filtered, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
+
+def Blur_subtraction(img,blur_size):
+
+    blurred_img = cv.GaussianBlur(img,(blur_size,blur_size),0)
+
+    subtracted_img = img-blurred_img
+
+    return subtracted_img

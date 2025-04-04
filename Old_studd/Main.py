@@ -23,7 +23,7 @@ img = cv.cvtColor (img, cv.COLOR_BGR2GRAY)
 img = cv.equalizeHist (img)
 
 plt.imshow (img,cmap='gray')
-# plt.show()
+plt.show()
 #
 # xc1 = input('x position of top cross: ', )
 # xc2 = input('x position of bottom cross: ', )
