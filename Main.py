@@ -9,6 +9,7 @@ from Pre_processing import standard_pre
 from Canny_visualizer import cannyEdge_visual
 from circle_finder import circles_finder
 from video_maker import video_maker
+from Masking import mask_points
 
 # using the Pic_loader function to return the path
 root = os.getcwd()
@@ -51,5 +52,13 @@ ref_img = ref_img[:-4,:]
 # cv.imwrite('220C_4bar_corrected.bmp', work_img)
 # cv.imwrite('220C_ref_corrected.bmp', ref_img)
 
-BOS_video = video_maker(ref_img,work_img)
+mask_points = mask_points(ref_img)
 
+ref_img_M = cv.bitwise_and (ref_img, ref_img, mask=mask_points)
+work_img_M = cv.bitwise_and (work_img, work_img, mask=mask_points)
+
+plt.subplot(1,2,1)
+plt.imshow(ref_img_M)
+plt.subplot(1,2,2)
+plt.imshow(work_img_M)
+plt.show()
