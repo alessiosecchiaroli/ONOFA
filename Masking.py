@@ -29,5 +29,35 @@ def mask_points(img):
     mask = cv.polylines (img, [pts], isClosed=True, color=(0, 0, 0), thickness=2)
 
     # masked_frame = cv.bitwise_and (img, img, mask=mask)
+    np.save("220C",pts)
 
     return mask
+
+def shape_isolation(image, shape_points):
+
+    # Create a blank single-channel mask the same size as the image
+    mask = np.zeros (image.shape[:2], dtype=np.uint8)
+
+    # Fill the polygon (instead of just drawing the outline)
+    cv.fillPoly (mask, [shape_points], 255)
+
+    # Optional: visualize the filled area
+    # cv.imshow ('Mask', mask);
+    # cv.waitKey (0)
+
+    # Apply the mask to keep only the area inside the polygon
+    image_Mask = cv.bitwise_and (image, image, mask=mask)
+    # work_img_M = cv.bitwise_and (work_img, work_img, mask=mask)
+
+    if len (image.shape) == 2:
+        # Grayscale image: just use a scalar
+        background = np.full_like (image, 255)  # or 0 for black
+    else:
+        # Color image: need to broadcast (255, 255, 255) to image shape
+        background = np.full (image.shape, background_color, dtype=np.uint8)
+
+    # Combine the masked image with the background
+    image_final = np.where (mask == 255, image, background)
+    # work_img_final = np.where (mask == 255, work_img, background)
+
+    return image_final

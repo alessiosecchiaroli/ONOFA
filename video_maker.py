@@ -28,6 +28,8 @@ def video_maker(ref_frame,work_frame):
     video.release ()
     print ("Video saved as output.mp4")
 
+    return video
+
     # # optional: play the video
     # cap = cv.VideoCapture ('output.mp4')
     # while cap.isOpened ():
