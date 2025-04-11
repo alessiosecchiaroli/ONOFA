@@ -3,43 +3,44 @@ import cv2 as cv
 from scipy.ndimage.filters import convolve as filter2
 import matplotlib.pyplot as plt
 
-def get_magnitude(u, v):
-    scale = 3
-    sum = 0.0
-    counter = 0.0
-
-    for i in range(0, u.shape[0], 8):
-        for j in range(0, u.shape[1],8):
-            counter += 1
-            dy = v[i,j] * scale
-            dx = u[i,j] * scale
-            magnitude = (dx**2 + dy**2)**0.5
-            sum += magnitude
-
-    mag_avg = sum / counter
-
-    return mag_avg
-
-
-
-def draw_quiver(u,v,beforeImg):
-    scale = 3
-    ax = plt.figure().gca()
-    ax.imshow(beforeImg, cmap = 'gray')
-
-    magnitudeAvg = get_magnitude(u, v)
-
-    for i in range(0, u.shape[0], 8):
-        for j in range(0, u.shape[1],8):
-            dy = v[i,j] * scale
-            dx = u[i,j] * scale
-            magnitude = (dx**2 + dy**2)**0.5
-            #draw only significant changes
-            if magnitude > magnitudeAvg:
-                ax.arrow(j,i, dx, dy, color = 'red')
-
-    plt.draw()
-    plt.show()
+# def get_magnitude(u, v):
+#     scale = 0.000001
+#     sum = 0.0
+#     counter = 0.0
+#
+#     for i in range(0, u.shape[0], 8):
+#         for j in range(0, u.shape[1],8):
+#             counter += 1
+#             dy = v[i,j] * scale
+#             dx = u[i,j] * scale
+#             # magnitude = (dx**2 + dy**2)**0.5
+#             magnitude = ((dx**2 + dy**2)**0.5)/1000
+#             sum += magnitude
+#
+#     mag_avg = sum / counter
+#
+#     return mag_avg
+#
+#
+#
+# def draw_quiver(u,v,beforeImg):
+#     scale = 0.000001
+#     ax = plt.figure().gca()
+#     ax.imshow(beforeImg, cmap = 'gray')
+#
+#     magnitudeAvg = get_magnitude(u, v)
+#
+#     for i in range(0, u.shape[0], 8):
+#         for j in range(0, u.shape[1],8):
+#             dy = v[i,j] * scale
+#             dx = u[i,j] * scale
+#             magnitude = (dx**2 + dy**2)**0.5
+#             #draw only significant changes
+#             if magnitude > magnitudeAvg:
+#                 ax.arrow(j,i, dx, dy, color = 'red')
+#
+#     plt.draw()
+#     plt.show()
 def get_derivatives(img1, img2):
     #derivative masks
     x_kernel = np.array([[-1, 1], [-1, 1]]) * 0.25
@@ -56,8 +57,8 @@ def get_derivatives(img1, img2):
 def computeHS(beforeImg, afterImg, alpha, delta):
 
     #removing noise
-    beforeImg  = cv.GaussianBlur(beforeImg, (5, 5), 0)
-    afterImg = cv.GaussianBlur(afterImg, (5, 5), 0)
+    beforeImg  = cv.GaussianBlur(beforeImg, (5,5), 0)
+    afterImg = cv.GaussianBlur(afterImg, (5,5), 0)
 
     # set up initial values
     u = np.zeros((beforeImg.shape[0], beforeImg.shape[1]))
@@ -84,9 +85,28 @@ def computeHS(beforeImg, afterImg, alpha, delta):
             # print("iteration number: ", iter_counter)
             break
 
-    draw_quiver(u, v, beforeImg)
-
     return [u, v]
+
+
+# Assume Image is the grayscale image, u and v are the optical flow fields
+def draw_optical_flow(Image, u, v, step = 10,scale = 1, color = 'red'):
+
+    plt.figure() #(figsize=(10, 10))
+    plt.imshow (Image, cmap='gray')
+
+    # Create a grid of coordinates (downsampled with step)
+    y, x = np.mgrid[0:Image.shape[0]:step, 0:Image.shape[1]:step]
+
+    # Downsample flow vectors for clarity
+    u_small = u[::step, ::step]*scale
+    v_small = v[::step, ::step]*scale
+
+    # Draw quiver plot
+    plt.quiver (x, y, u_small, v_small, color=color, angles='xy', scale_units='xy', scale=scale)
+
+    plt.title ("Optical Flow (Horn-Schunck)")
+    plt.axis ('off')
+    plt.show ()
 
 
 

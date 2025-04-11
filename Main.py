@@ -12,6 +12,7 @@ from video_maker import video_maker
 from Masking import mask_points
 from Masking import shape_isolation
 from OF_solver import computeHS
+from OF_solver import draw_optical_flow
 
 # using the Pic_loader function to return the path
 root = os.getcwd()
@@ -43,11 +44,12 @@ crosses_work = np.array(circles_finder(work_img,11, 860, 910))
 difference = crosses_reference.astype(np.int16) - crosses_work.astype(np.int16)
 
 if np.all(difference[0, :] == difference[1, :]):
-    print("Rows are identical: good :)")
+    print("Top and bottom cross displacements are identical --> good :)")
 else:
-    print("Rows are different: there might be an error :(")
+    print("cross displacements are different --> there might be an error :(")
 
-
+#slicing the original pic based on the displacement
+# now 4 is hardcoded :/
 work_img = work_img[4:,:]
 ref_img = ref_img[:-4,:]
 
@@ -70,6 +72,14 @@ mask_points = mask_points.reshape(63,2)
 ref_img_final = shape_isolation(ref_img,mask_points)
 work_img_final = shape_isolation(work_img,mask_points)
 
+# find the min and max y, to reduce the frames' dimensions
+max_y = np.max(mask_points[:,1])
+min_y = np.min(mask_points[:,1])
+
+# slice the picture
+ref_img_final = ref_img_final[min_y:max_y,:]
+work_img_final = work_img_final[min_y:max_y,:]
+
 # cv.imwrite('Correlable_pics/220C_4bar_masked.bmp', work_img_final)
 # cv.imwrite('Correlable_pics/220C_ref_masked.bmp', ref_img_final)
 
@@ -82,8 +92,24 @@ work_img_final = shape_isolation(work_img,mask_points)
 # make a video, required for OF
 # BOS_220C_4bar = video_maker(ref_img_final,work_img_final)
 
+ref_img_final = cv.normalize(ref_img_final,ref_img_final,alpha = 255, beta=0, norm_type=cv.NORM_MINMAX)
+work_img_final = cv.normalize(work_img_final,work_img_final,alpha = 255, beta=0, norm_type=cv.NORM_MINMAX)
 
-u,v = computeHS(ref_img_final, work_img_final, alpha = 15, delta = 1)
+
+# plt.subplot(1,2,1)
+# plt.imshow(ref_img_final)
+# plt.subplot(1,2,2)
+# plt.imshow(work_img_final)
+# plt.show()
+
+
+# BOS_220C_4bar = video_maker(ref_img_final,work_img_final)
+
+u,v = computeHS(ref_img_final, work_img_final, alpha = 50, delta = 0.1)
+#
+#
+# # print(u,v)
+draw_optical_flow(ref_img_final,u,v,step=20, scale=10)
 
 
 
