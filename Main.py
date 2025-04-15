@@ -11,15 +11,10 @@ from circle_finder import circles_finder
 from video_maker import video_maker
 from Masking import mask_points
 from Masking import shape_isolation
-from OF_solver import computeHS
-from OF_solver import draw_OF_HS
-from OF_solver import computeLK
-from OF_solver import draw_OF_LK
-from OF_solver import computeDenseFlow
-from OF_solver import draw_DenseFlow
+from OF_solver import *
 from Optical_Flow import draw_tracking
 from Optical_Flow import computeLK_tracking
-
+from Pyramidal_Horn_Schunck import HS_pyramidal
 
 # using the Pic_loader function to return the path
 root = os.getcwd()
@@ -127,20 +122,24 @@ check = ref_img_final-work_img_final
 # plt.imshow(work_img_final,cmap='gray')
 # plt.show()
 
-p0, p1, err = computeLK_tracking(ref_img_final,work_img_final)
 
-# Draw tracking overlays on the image
-tracked_img = draw_tracking(ref_img_final, p0, p1)
+u, v = HS_pyramidal(ref_img_final, work_img_final, alpha=0.9, levels=3, delta=0.1)
+draw_OF_HS(ref_img_final, u, v, step = 50,scale = 1, color = 'red')
+# print('debug')
 
-# Convert image from BGR to RGB
-tracked_img_rgb = cv.cvtColor(tracked_img, cv.COLOR_BGR2RGB)
+# # If using Lucas-Kanade method for tracking the next lines plot the Optical flow 
+# # Draw tracking overlays on the image
+# tracked_img = draw_tracking(ref_img_final, p0, p1)
 
-# Plot using matplotlib
-plt.figure(figsize=(10, 6))
-plt.imshow(tracked_img_rgb)
-plt.title("Optical Flow Tracking")
-plt.axis("off")
-plt.show()
+# # Convert image from BGR to RGB
+# tracked_img_rgb = cv.cvtColor(tracked_img, cv.COLOR_BGR2RGB)
+
+# # Plot using matplotlib
+# plt.figure(figsize=(10, 6))
+# plt.imshow(tracked_img_rgb)
+# plt.title("Optical Flow Tracking")
+# plt.axis("off")
+# plt.show()
 
 
 
