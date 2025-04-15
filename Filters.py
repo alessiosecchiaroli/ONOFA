@@ -40,3 +40,29 @@ def Blur_subtraction(img,blur_size):
     subtracted_img = img-blurred_img
 
     return subtracted_img
+
+def match_background_intensity_gray(reference_image, target_image, background_mask):
+    # Compute mean background intensity in both images
+    ref_mean = np.mean(reference_image[background_mask])
+    tgt_mean = np.mean(target_image[background_mask])
+
+    # Calculate adjustment factor
+    adjustment_factor = ref_mean / tgt_mean
+
+    # Apply the adjustment
+    adjusted = np.clip(target_image * adjustment_factor, 0, 255).astype(np.uint8)
+
+    return adjusted
+
+
+
+# # Create a mask for the background region
+# # For example, assuming the background is a specific color or can be segmented
+# # Here, we create a dummy mask; replace this with your actual background mask
+# background_mask = np.ones (reference_image.shape[:2], dtype=bool)
+#
+# # Adjust the target image to match the reference image's background intensity
+# adjusted_image = match_background_intensity (reference_image, target_image, background_mask)
+#
+# # Save or display the adjusted image
+# cv2.imwrite ('adjusted_target.jpg', adjusted_image)

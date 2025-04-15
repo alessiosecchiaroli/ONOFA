@@ -3,44 +3,6 @@ import cv2 as cv
 from scipy.ndimage.filters import convolve as filter2
 import matplotlib.pyplot as plt
 
-# def get_magnitude(u, v):
-#     scale = 0.000001
-#     sum = 0.0
-#     counter = 0.0
-#
-#     for i in range(0, u.shape[0], 8):
-#         for j in range(0, u.shape[1],8):
-#             counter += 1
-#             dy = v[i,j] * scale
-#             dx = u[i,j] * scale
-#             # magnitude = (dx**2 + dy**2)**0.5
-#             magnitude = ((dx**2 + dy**2)**0.5)/1000
-#             sum += magnitude
-#
-#     mag_avg = sum / counter
-#
-#     return mag_avg
-#
-#
-#
-# def draw_quiver(u,v,beforeImg):
-#     scale = 0.000001
-#     ax = plt.figure().gca()
-#     ax.imshow(beforeImg, cmap = 'gray')
-#
-#     magnitudeAvg = get_magnitude(u, v)
-#
-#     for i in range(0, u.shape[0], 8):
-#         for j in range(0, u.shape[1],8):
-#             dy = v[i,j] * scale
-#             dx = u[i,j] * scale
-#             magnitude = (dx**2 + dy**2)**0.5
-#             #draw only significant changes
-#             if magnitude > magnitudeAvg:
-#                 ax.arrow(j,i, dx, dy, color = 'red')
-#
-#     plt.draw()
-#     plt.show()
 def get_derivatives(img1, img2):
     #derivative masks
     x_kernel = np.array([[-1, 1], [-1, 1]]) * 0.25
@@ -89,7 +51,7 @@ def computeHS(beforeImg, afterImg, alpha, delta):
 
 
 # Assume Image is the grayscale image, u and v are the optical flow fields
-def draw_optical_flow(Image, u, v, step = 10,scale = 1, color = 'red'):
+def draw_OF_HS(Image, u, v, step = 10,scale = 1, color = 'red'):
 
     plt.figure() #(figsize=(10, 10))
     plt.imshow (Image, cmap='gray')
@@ -102,11 +64,94 @@ def draw_optical_flow(Image, u, v, step = 10,scale = 1, color = 'red'):
     v_small = v[::step, ::step]*scale
 
     # Draw quiver plot
-    plt.quiver (x, y, u_small, v_small, color=color, angles='xy', scale_units='xy', scale=scale)
+    plt.quiver (x, y, u_small, v_small, color=color, angles='xy', scale_units='xy')
 
     plt.title ("Optical Flow (Horn-Schunck)")
     plt.axis ('off')
     plt.show ()
 
+def computeLK(ref_frame, work_frame,exp_max_disp):
 
 
+    lk_params = dict (winSize=(15, 15),
+                      maxLevel=6,
+                      criteria=(cv.TERM_CRITERIA_EPS | cv.TERM_CRITERIA_COUNT, 10, 0.03))
+
+    # initial displacement
+    y_dim, x_dim = ref_frame.shape
+
+    # init = np.random.normal(loc=x_dim/3,scale=exp_max_disp,size=x_dim)
+
+    # Generate grid of points (e.g., 500 total)
+    x_points = x_dim
+    y_points = y_dim
+    xs = np.random.normal (loc=exp_max_disp, scale=1, size=x_points)
+    ys = np.random.uniform (0, 1, size=y_points)
+
+    # Clip points to stay inside image bounds
+    xs = np.clip (xs, 0, x_dim - 1)
+    ys = np.clip (ys, 0, y_dim - 1)
+
+    # Stack and reshape to (N, 1, 2), type float32
+    p0 = np.vstack((xs, ys)).T.astype(np.float32).reshape(-1, 1, 2)
+
+    # calculate optical flow
+    p1, st, err = cv.calcOpticalFlowPyrLK (ref_frame, work_frame, p0, None, **lk_params)
+
+    return p1,st,err
+
+
+def computeDenseFlow(ref_frame, work_frame):
+    # Ensure grayscale
+    if len(ref_frame.shape) == 3:
+        ref_frame = cv.cvtColor(ref_frame, cv.COLOR_BGR2GRAY)
+    if len(work_frame.shape) == 3:
+        work_frame = cv.cvtColor(work_frame, cv.COLOR_BGR2GRAY)
+
+    # Calculate dense optical flow
+    flow = cv.calcOpticalFlowFarneback(ref_frame, work_frame,
+                                       None,
+                                       pyr_scale=0.5,
+                                       levels=5,
+                                       winsize=15,
+                                       iterations=5,
+                                       poly_n=7,
+                                       poly_sigma=1.5,
+                                       flags=0)
+    return flow  # shape: (H, W, 2), where [:,:,0] = flow_x, [:,:,1] = flow_y
+
+def draw_OF_LK(Image, u, v, step = 10,scale = 1, color = 'red'):
+
+    plt.figure() #(figsize=(10, 10))
+    plt.imshow (Image, cmap='gray')
+
+    # Create a grid of coordinates (downsampled with step)
+    y, x = np.mgrid[0:Image.shape[0]:step, 0:Image.shape[1]:step]
+
+    # Downsample flow vectors for clarity
+    u_small = u[::step]*scale
+    v_small = v[::step]*scale
+
+    # Draw quiver plot
+    plt.quiver (x, y, u_small, v_small, color=color, angles='xy', scale_units='xy')
+
+    plt.title ("Optical Flow (Lucas-Kanade)")
+    plt.axis ('off')
+    plt.show ()
+
+def draw_DenseFlow(Image, Flow, step = 10, scale=1, color = 'red'):
+
+    plt.figure()
+    plt.imshow(Image, cmap='gray')
+
+    # Create a grid of coordinates (downsampled with step)
+    y, x = np.mgrid[0:Image.shape[0]:step, 0:Image.shape[1]:step]
+
+    u = Flow[:,:,0]
+    v = Flow[:,:,1]
+
+    cv.cartToPolar(u,v)
+
+    plt.title ("Optical Flow (Dense-Flow)")
+    plt.axis ('off')
+    plt.show ()

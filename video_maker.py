@@ -16,7 +16,7 @@ def video_maker(ref_frame,work_frame):
 
     height, width, layers = ref_frame.shape
     fourcc = cv.VideoWriter_fourcc (*'mp4v')  # or 'XVID', 'MJPG', etc.
-    video = cv.VideoWriter ('output.mp4', fourcc, 1, (width, height))  # 1 FPS
+    video = cv.VideoWriter ('output.mp4', fourcc, 0.2, (width, height))  # 1 FPS
     # # in case, you want to see the video 0.5 FPS is better as the video is slower and more appreciable
     # video = cv.VideoWriter ('output.mp4', fourcc, 0.5, (width, height))  # 0.5 FPS
 

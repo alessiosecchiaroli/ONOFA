@@ -12,7 +12,14 @@ from video_maker import video_maker
 from Masking import mask_points
 from Masking import shape_isolation
 from OF_solver import computeHS
-from OF_solver import draw_optical_flow
+from OF_solver import draw_OF_HS
+from OF_solver import computeLK
+from OF_solver import draw_OF_LK
+from OF_solver import computeDenseFlow
+from OF_solver import draw_DenseFlow
+from Optical_Flow import draw_tracking
+from Optical_Flow import computeLK_tracking
+
 
 # using the Pic_loader function to return the path
 root = os.getcwd()
@@ -53,6 +60,15 @@ else:
 work_img = work_img[4:,:]
 ref_img = ref_img[:-4,:]
 
+# Create a mask for the background region
+# For example, assuming the background is a specific color or can be segmented
+# Here, we create a dummy mask; replace this with your actual background mask
+background_mask = np.ones (ref_img.shape[:2], dtype=bool)
+
+# Adjust the target image to match the reference image's background intensity
+adjusted_image = match_background_intensity_gray (ref_img, work_img, background_mask)
+# BOS_220C_4bar = video_maker(ref_img,work_img)
+
 # cv.imwrite('220C_4bar_corrected.bmp', work_img)
 # cv.imwrite('220C_ref_corrected.bmp', ref_img)
 
@@ -92,24 +108,39 @@ work_img_final = work_img_final[min_y:max_y,:]
 # make a video, required for OF
 # BOS_220C_4bar = video_maker(ref_img_final,work_img_final)
 
-ref_img_final = cv.normalize(ref_img_final,ref_img_final,alpha = 255, beta=0, norm_type=cv.NORM_MINMAX)
-work_img_final = cv.normalize(work_img_final,work_img_final,alpha = 255, beta=0, norm_type=cv.NORM_MINMAX)
+# ref_img_final = cv.normalize(ref_img_final,ref_img_final,alpha = 255, beta=0, norm_type=cv.NORM_MINMAX)
+ref_img_final = cv.normalize(ref_img_final,ref_img_final,0,255, norm_type=cv.NORM_MINMAX)
+work_img_final = cv.normalize(work_img_final,work_img_final,0, 255, norm_type=cv.NORM_MINMAX)
+# work_img_final = cv.normalize(work_img_final,work_img_final,alpha = 255, beta=0, norm_type=cv.NORM_MINMAX)
 
+check = ref_img_final-work_img_final
 
-# plt.subplot(1,2,1)
-# plt.imshow(ref_img_final)
-# plt.subplot(1,2,2)
-# plt.imshow(work_img_final)
+# plt.imshow(check)
 # plt.show()
 
+# ref_img_final = Blur_subtraction(ref_img_final,99)
+# work_img_final = Blur_subtraction(work_img_final,99)
 
-# BOS_220C_4bar = video_maker(ref_img_final,work_img_final)
+# plt.subplot(1,2,1)
+# plt.imshow(ref_img_final,cmap='gray')
+# plt.subplot(1,2,2)
+# plt.imshow(work_img_final,cmap='gray')
+# plt.show()
 
-u,v = computeHS(ref_img_final, work_img_final, alpha = 50, delta = 0.1)
-#
-#
-# # print(u,v)
-draw_optical_flow(ref_img_final,u,v,step=20, scale=10)
+p0, p1, err = computeLK_tracking(ref_img_final,work_img_final)
+
+# Draw tracking overlays on the image
+tracked_img = draw_tracking(ref_img_final, p0, p1)
+
+# Convert image from BGR to RGB
+tracked_img_rgb = cv.cvtColor(tracked_img, cv.COLOR_BGR2RGB)
+
+# Plot using matplotlib
+plt.figure(figsize=(10, 6))
+plt.imshow(tracked_img_rgb)
+plt.title("Optical Flow Tracking")
+plt.axis("off")
+plt.show()
 
 
 
