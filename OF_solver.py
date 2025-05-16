@@ -193,3 +193,43 @@ def horn_schunck_optical_flow(frame1, frame2, alpha=1.0, delta=1e-3, num_levels=
         v += dv
 
     return u, v
+
+
+#compute magnitude in each 8 pixels. return magnitude average
+def get_magnitude(u, v):
+    scale = 3
+    sum = 0.0
+    counter = 0.0
+
+    for i in range(0, u.shape[0], 8):
+        for j in range(0, u.shape[1],8):
+            counter += 1
+            dy = v[i,j] * scale
+            dx = u[i,j] * scale
+            magnitude = (dx**2 + dy**2)**0.5
+            sum += magnitude
+
+    mag_avg = sum / counter
+
+    return mag_avg
+
+
+
+def draw_quiver(u,v,beforeImg):
+    scale = 3
+    ax = plt.figure().gca()
+    ax.imshow(beforeImg, cmap = 'gray')
+
+    magnitudeAvg = get_magnitude(u, v)
+
+    for i in range(0, u.shape[0], 8):
+        for j in range(0, u.shape[1],8):
+            dy = v[i,j] * scale
+            dx = u[i,j] * scale
+            magnitude = (dx**2 + dy**2)**0.5
+            #draw only significant changes
+            if magnitude > magnitudeAvg:
+                ax.arrow(j,i, dx, dy, color = 'red')
+
+    plt.draw()
+    plt.show()

@@ -2,7 +2,6 @@ import cv2 as cv
 import os
 import matplotlib.pyplot as plt
 import numpy as np
-
 from Filters import *
 from Data_loader import Pic_loader
 from Pre_processing import standard_pre
@@ -23,6 +22,7 @@ work_img_path = os.path.join(root, './Exp_pics/220C_4bar.bmp')
 
 ref_img = cv.imread(ref_img_path)
 work_img = cv.imread(work_img_path)
+
 
 # plt.imshow(img)
 # plt.show()
@@ -61,7 +61,7 @@ ref_img = ref_img[:-4,:]
 background_mask = np.ones (ref_img.shape[:2], dtype=bool)
 
 # Adjust the target image to match the reference image's background intensity
-adjusted_image = match_background_intensity_gray (ref_img, work_img, background_mask)
+# adjusted_image = match_background_intensity_gray (ref_img, work_img, background_mask)
 # BOS_220C_4bar = video_maker(ref_img,work_img)
 
 # cv.imwrite('220C_4bar_corrected.bmp', work_img)
@@ -123,8 +123,12 @@ check = ref_img_final-work_img_final
 # plt.show()
 
 
-u, v = HS_pyramidal(ref_img_final, work_img_final, alpha=0.9, levels=3, delta=0.1)
-draw_OF_HS(ref_img_final, u, v, step = 50,scale = 1, color = 'red')
+u, v = HS_pyramidal(ref_img_final, work_img_final, alpha=0.2, levels=4, delta=0.05)
+draw_quiver(u,v,ref_img_final)
+
+np.save("u-displacement",u)
+np.save("v-displacement",v)
+# draw_OF_HS(ref_img_final, u, v, step = 10,scale = 1, color = 'red')
 # print('debug')
 
 # # If using Lucas-Kanade method for tracking the next lines plot the Optical flow 
@@ -141,6 +145,8 @@ draw_OF_HS(ref_img_final, u, v, step = 50,scale = 1, color = 'red')
 # plt.axis("off")
 # plt.show()
 
+# plt.plot(u[370,:])
+# plt.show()
 
 
 
