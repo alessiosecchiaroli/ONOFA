@@ -14,46 +14,98 @@ from OF_solver import *
 from Optical_Flow import draw_tracking
 from Optical_Flow import computeLK_tracking
 from Pyramidal_Horn_Schunck import HS_pyramidal
+from blob_detector_function import cross_finder
 
 # using the Pic_loader function to return the path
 root = os.getcwd()
-ref_img_path = os.path.join(root, './Exp_pics/220C_reference.bmp')
-work_img_path = os.path.join(root, './Exp_pics/220C_4bar.bmp')
+ref_img_path = os.path.join(root, './Exp_pics/220C/220C_ref.tif')
+work_img_path = os.path.join(root, './Exp_pics/220C/220C_9bar.tif')
+# ref_img_path = os.path.join(root, './Exp_pics/220C_reference.bmp')
+# work_img_path = os.path.join(root, './Exp_pics/220C_4bar.bmp')
+
 
 ref_img = cv.imread(ref_img_path)
 work_img = cv.imread(work_img_path)
 
 
-# plt.imshow(img)
+# plt.subplot(1,2,1)
+# plt.imshow(ref_img,cmap='gray')
+# plt.subplot(1,2,2)
+# plt.imshow(work_img,cmap='gray')
 # plt.show()
 
 # standard pre-processing applied
 ref_img = standard_pre(ref_img,1)
 work_img = standard_pre(work_img,1)
 
-# plt.subplot(1,2,1)
-# plt.imshow(ref_img)
-# plt.subplot(1,2,2)
-# plt.imshow(work_img)
+# plt.imshow(ref_img,cmap='gray')
 # plt.show()
 
-crosses_reference = np.array(circles_finder(ref_img,11, 850, 900))
-crosses_work = np.array(circles_finder(work_img,11, 860, 910))
+# subtract the images to see the difference
+# trial = work_img - ref_img
+
+# plt.imshow(trial)
+# plt.show()
+
+# plt.subplot(1,2,1)
+# plt.imshow(ref_img,cmap='gray')
+# plt.subplot(1,2,2)
+# plt.imshow(work_img,cmap='gray')    
+# plt.show()
+
+
+# HERE I USED TO ALIGN THE IMAGES, NOW I WILL USE A FUNCTION
+# crosses_reference = np.array(circles_finder(ref_img,11, 830, 910,48,4))
+# crosses_work = np.array(circles_finder(work_img,11, 830, 910,48,4))
+
+# # Cross Reference 
+CRT_pos, CRT_size = cross_finder(ref_img,13) # TOP
+CRB_pos, CRB_size = cross_finder(ref_img,17) # BOTTOM
+
+CRT = np.append(CRT_pos, CRT_size)
+CRB = np.append(CRB_pos, CRB_size)
+
+crosses_reference = np.vstack((CRT, CRB))
+
+# crosses_reference = np.append(crosses_reference_top, crosses_reference_bottom, axis=0)
+print(crosses_reference)
+
+# # Cross Working
+CWT_pos, CWT_size = cross_finder(work_img,13)
+CWB_pos, CWB_size = cross_finder(work_img,17)
+
+CWT = np.append(CWT_pos, CWT_size)
+CWB = np.append(CWB_pos, CWB_size)
+
+crosses_work = np.vstack((CWT, CWB))
+
+# crosses_reference = np.append(crosses_reference_top, crosses_reference_bottom, axis=0)
+print(crosses_reference)
+print(crosses_work)
+
+
+print(crosses_work)
+
+# # plt.subplot(1,2,1)
+# # plt.imshow(ref_img)
+# # plt.subplot(1,2,2)
+# # plt.imshow(work_img)
+# # plt.show()
 
 # print(crosses_reference)
 # print(crosses_work)
 
-difference = crosses_reference.astype(np.int16) - crosses_work.astype(np.int16)
+# difference = crosses_reference.astype(np.int16) - crosses_work.astype(np.int16)
 
-if np.all(difference[0, :] == difference[1, :]):
-    print("Top and bottom cross displacements are identical --> good :)")
-else:
-    print("cross displacements are different --> there might be an error :(")
+# if np.all(difference[0, :] == difference[1, :]):
+#     print("Top and bottom cross displacements are identical --> good :)")
+# else:
+#     print("cross displacements are different --> rotation correction needed")
 
 #slicing the original pic based on the displacement
 # now 4 is hardcoded :/
-work_img = work_img[4:,:]
-ref_img = ref_img[:-4,:]
+work_img = work_img[4:,5:]
+ref_img = ref_img[:-4,:-5]
 
 # Create a mask for the background region
 # For example, assuming the background is a specific color or can be segmented
@@ -68,27 +120,32 @@ background_mask = np.ones (ref_img.shape[:2], dtype=bool)
 # cv.imwrite('220C_ref_corrected.bmp', ref_img)
 
 # if it's first run at particular conditions, use this function to make a mask
-# mask_points = mask_points(ref_img)
+# the script will brake after the mask is created, but a npy file will be created
+# mask_point = mask_points(ref_img)
 
-# otherwise use this one, adjust the name
-mask_points = np.load("Mask_shapes/220C.npy")
-mask_length = np.size(mask_points,0)
-mask_points = mask_points.reshape(int(mask_length),2) 
+# # otherwise use this one, adjust the name based on the npy file created
+mask_point = np.load("Mask_shapes/220C.npy")
+mask_point = mask_point.reshape(20,2)
 
 
-ref_img_final = shape_isolation(ref_img,mask_points)
-work_img_final = shape_isolation(work_img,mask_points)
+mask = cv.polylines (ref_img, [mask_point], isClosed=True, color=(0, 0, 0), thickness=3)
+
+ref_img_M = cv.bitwise_and (ref_img, ref_img, mask=mask)
+work_img_M = cv.bitwise_and (work_img, work_img, mask=mask)
+
+ref_img_final = shape_isolation(ref_img,mask_point)
+work_img_final = shape_isolation(work_img,mask_point)
 
 # find the min and max y, to reduce the frames' dimensions
-max_y = np.max(mask_points[:,1])
-min_y = np.min(mask_points[:,1])
+max_y = np.max(mask_point[:,1])
+min_y = np.min(mask_point[:,1])
 
 # slice the picture
 ref_img_final = ref_img_final[min_y:max_y,:]
 work_img_final = work_img_final[min_y:max_y,:]
 
-# cv.imwrite('Correlable_pics/220C_4bar_masked.bmp', work_img_final)
-# cv.imwrite('Correlable_pics/220C_ref_masked.bmp', ref_img_final)
+cv.imwrite('Correlable_pics/220C_9bar_masked.bmp', work_img_final)
+cv.imwrite('Correlable_pics/220C_ref_masked.bmp', ref_img_final)
 
 # plt.subplot(1,2,1)
 # plt.imshow(ref_img_final)
@@ -119,7 +176,7 @@ check = ref_img_final-work_img_final
 # plt.show()
 
 
-u, v = HS_pyramidal(ref_img_final, work_img_final, alpha=1, levels=3, delta=1e-3)
+u, v = HS_pyramidal(ref_img_final, work_img_final, alpha=15, levels=2, delta=0.01)
 draw_quiver(u,v,ref_img_final)
 
 np.save("u-alpha1",u)

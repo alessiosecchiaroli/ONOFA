@@ -8,7 +8,14 @@ It is tuned for the ORCHID nozzle, so a few parameter might be hardcoded.
 
 The input are two frames (working  picture and reference picture), it finds the position of the crosses on either sides of the nozzle.
 It overlap the two frames, to correct for the rigid shift of the nozzle between the two frames.
+
+
+Main: 
 After the nozzle shape in the frame is overlapped, a mask is generated, and finally the optical flow algortihm is used to obtain the displacement.
+
+Main v1:
+A background subtraction technique is used in order to try generating an algorithmic mask.
+Finally the optical flow algorithm is used to obtain the displacement.
 
 
 

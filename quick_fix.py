@@ -1,5 +1,6 @@
 import numpy as np
 
+# quick fix for problems related to masking the image
 points = np.load("220C.npy")
 
 

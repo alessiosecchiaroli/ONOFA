@@ -20,6 +20,10 @@ def standard_pre(img,scale_factor):
     img = cv.cvtColor (img, cv.COLOR_BGR2GRAY)
     image_processed = cv.equalizeHist (img)
 
+    # # Preprocess with CLAHE to normalize lighting
+    # clahe = cv.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    # image_processed = clahe.apply(img)
+
     # plotting for debugging, it works :)
     # plt.imshow (image_processed, cmap='gray')
     # plt.show()

@@ -19,8 +19,8 @@ def get_first_order_derivatives(img1, img2):
 
 def HS_pyramidal(Image1,Image2, alpha, levels,delta=0.1):
 
-    Image1 = Image1.astype(np.float64) / 255.0
-    Image2 = Image2.astype(np.float64) / 255.0
+    Image1 = Image1.astype(np.float64) #/ 255.0
+    Image2 = Image2.astype(np.float64) #/ 255.0
     # dividends = []
     # for j in range(levels):
     #     dividends.append(2**(levels-j))
@@ -59,9 +59,18 @@ def HS_pyramidal(Image1,Image2, alpha, levels,delta=0.1):
         # v = np.zeros((beforeImg.shape[0], beforeImg.shape[1]))
         fx, fy, ft = get_first_order_derivatives(Before_Img, After_Img)
     
+    # # the kernel with -1 as center element is the original Laplacian kernel
+    # # suggested by Horn and Schunck in 1981
+    # # the kernel with 0 as center element helps with the convergence of the algorithm
+    # # by smoothing the flow field
+    
+        # avg_kernel = np.array([[1 / 12, 1 / 6, 1 / 12],
+        #                         [1 / 6, -1, 1 / 6],
+        #                         [1 / 12, 1 / 6, 1 / 12]], float)
         avg_kernel = np.array([[1 / 12, 1 / 6, 1 / 12],
                                 [1 / 6, 0, 1 / 6],
                                 [1 / 12, 1 / 6, 1 / 12]], float)
+        
         iter_counter = 0
     
         while True:
@@ -71,7 +80,10 @@ def HS_pyramidal(Image1,Image2, alpha, levels,delta=0.1):
 
 
         #optical flow implementation
-            p = (fx * u_avg) + (fy * v_avg) + ft       
+            p = (fx * u_avg) + (fy * v_avg) + ft 
+            # # if using the original kernel, use this line
+            # d = alpha + fx**2 + fy**2
+            # # if using the smoothing kernel, use this line instead      
             d = 4 * alpha**2 + fx**2 + fy**2
 
             previous = u.copy()

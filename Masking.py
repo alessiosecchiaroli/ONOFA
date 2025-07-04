@@ -31,7 +31,7 @@ def mask_points(img):
     # masked_frame = cv.bitwise_and (img, img, mask=mask)
     np.save("220C",pts)
 
-    return mask
+    return mask #, np.array(len (points_raw))
 
 def shape_isolation(image, shape_points):
 
