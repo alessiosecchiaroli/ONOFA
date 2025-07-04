@@ -1,14 +1,15 @@
 import cv2 as cv
 import numpy as np
+from scipy.ndimage import convolve
 
 def detect_dots(frame_gray):
     # Set up the SimpleBlobDetector parameters.
     params = cv.SimpleBlobDetector_Params()
-    # params.filterByColor = True
-    # params.blobColor = 255
+    params.filterByColor = True
+    params.blobColor = 0
     params.filterByArea = True
-    params.minArea = 15
-    params.maxArea = 60
+    params.minArea = 25
+    params.maxArea = 50
     params.filterByCircularity = False
     params.filterByConvexity = False
     params.filterByInertia = False
@@ -29,7 +30,7 @@ def computeLK_tracking(ref_gray, work_gray):
     p0 = detect_dots(ref_gray)
 
     lk_params = dict(winSize=(21, 21),
-                     maxLevel=6,
+                     maxLevel=5,
                      criteria=(cv.TERM_CRITERIA_EPS | cv.TERM_CRITERIA_COUNT, 10, 1))
 
     # Run LK Optical Flow
@@ -52,6 +53,44 @@ def draw_tracking(ref_frame, p0, p1):
 
 
 
+def lucas_kanade_optical_flow(img1, img2, window_size=5):
+    img1 = img1.astype(np.float32)
+    img2 = img2.astype(np.float32)
+
+    img1 = cv.GaussianBlur(img1,(5,5),0)
+    img2 = cv.GaussianBlur(img2,(5,5),0)
+
+    # Compute gradients
+    kernel_x = np.array([[-1, 1], [-1, 1]]) * 0.25
+    kernel_y = np.array([[-1, -1], [1, 1]]) * 0.25
+    kernel_t = np.ones((2, 2)) * 0.25
+
+    Ix = convolve(img1, kernel_x) + convolve(img2, kernel_x)
+    Iy = convolve(img1, kernel_y) + convolve(img2, kernel_y)
+    It = convolve(img2, kernel_t) - convolve(img1, kernel_t)
+
+    u = np.zeros(img1.shape)
+    v = np.zeros(img1.shape)
+
+    half_w = window_size // 2
+
+    for y in range(half_w, img1.shape[0] - half_w):
+        for x in range(half_w, img1.shape[1] - half_w):
+            Ix_win = Ix[y - half_w:y + half_w + 1, x - half_w:x + half_w + 1].flatten()
+            Iy_win = Iy[y - half_w:y + half_w + 1, x - half_w:x + half_w + 1].flatten()
+            It_win = It[y - half_w:y + half_w + 1, x - half_w:x + half_w + 1].flatten()
+
+            A = np.stack((Ix_win, Iy_win), axis=1)
+            b = -It_win
+
+            # Least squares solution to A @ [u, v] = b
+            ATA = A.T @ A
+            if np.linalg.det(ATA) >= 1e-4:  # ensure it's invertible
+                uv = np.linalg.inv(ATA) @ A.T @ b
+                u[y, x] = uv[0]
+                v[y, x] = uv[1]
+
+    return u, v
 
 
 

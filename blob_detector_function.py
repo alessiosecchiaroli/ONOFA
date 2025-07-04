@@ -109,13 +109,13 @@ def cross_finder(img, blr):
     size = [kp.size for kp in keypoints]  # List of sizes
 
     # # Draw detected blobs as red circles
-    img_with_keypoints = cv.drawKeypoints(
-        img, keypoints, np.array([]),
-        (255, 255, 255), cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS
-    )
+    # img_with_keypoints = cv.drawKeypoints(
+    #     img, keypoints, np.array([]),
+    #     (255, 255, 255), cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS
+    # )
 
-    # Show keypoints
-    plt.imshow(img_with_keypoints)
-    plt.show()
+    # # Show keypoints
+    # plt.imshow(img_with_keypoints)
+    # plt.show()
 
     return position, size

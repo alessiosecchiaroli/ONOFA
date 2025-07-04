@@ -10,17 +10,22 @@ def get_first_order_derivatives(img1, img2):
     y_kernel = np.array([[-1, -1], [1, 1]]) * 0.25
     t_kernel = np.ones((2, 2)) * 0.25
 
-    fx = convolve(img1,x_kernel) + convolve(img2,x_kernel)
+    fx = convolve(img1, x_kernel) + convolve(img2, x_kernel)
     fy = convolve(img1, y_kernel) + convolve(img2, y_kernel)
     ft = convolve(img1, -t_kernel) + convolve(img2, t_kernel)
+    # ft = convolve(img1, t_kernel) + convolve(img2, -t_kernel)
 
-    return [fx,fy, ft]
+    return [fx,fy,ft]
 
 
-def HS_pyramidal(Image1,Image2, alpha, levels,delta=0.1):
+def HS_pyramidal(Image1,Image2, alpha, levels,delta=0.1,blr=5):
 
     Image1 = Image1.astype(np.float64) #/ 255.0
     Image2 = Image2.astype(np.float64) #/ 255.0
+
+    Image1  = cv.GaussianBlur(Image1, (blr, blr), 0)
+    Image2 = cv.GaussianBlur(Image2, (blr, blr), 0)
+
     # dividends = []
     # for j in range(levels):
     #     dividends.append(2**(levels-j))
@@ -48,8 +53,8 @@ def HS_pyramidal(Image1,Image2, alpha, levels,delta=0.1):
             u = np.zeros((Before_Img.shape[0], Before_Img.shape[1]))
             v = np.zeros((Before_Img.shape[0], Before_Img.shape[1]))
         else:
-            u = cv.pyrUp(u)    
-            v = cv.pyrUp(v)
+            u =  cv.pyrUp(u)    
+            v =  cv.pyrUp(v)
 
             # Resize to match the current pyramid level's shape
             u = cv.resize(u, (Before_Img.shape[1], Before_Img.shape[0]), interpolation=cv.INTER_LINEAR)
@@ -70,6 +75,7 @@ def HS_pyramidal(Image1,Image2, alpha, levels,delta=0.1):
         avg_kernel = np.array([[1 / 12, 1 / 6, 1 / 12],
                                 [1 / 6, 0, 1 / 6],
                                 [1 / 12, 1 / 6, 1 / 12]], float)
+
         
         iter_counter = 0
     
@@ -82,7 +88,7 @@ def HS_pyramidal(Image1,Image2, alpha, levels,delta=0.1):
         #optical flow implementation
             p = (fx * u_avg) + (fy * v_avg) + ft 
             # # if using the original kernel, use this line
-            # d = alpha + fx**2 + fy**2
+            # d = alpha**2 + fx**2 + fy**2
             # # if using the smoothing kernel, use this line instead      
             d = 4 * alpha**2 + fx**2 + fy**2
 

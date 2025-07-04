@@ -46,19 +46,15 @@ def draw_quiver(u,v):
     plt.show()
 
 
-def plot_midplane(u):
+def plot_midplane(u,label):
+    
 
     y_span = u.shape[0]
     midplane = round(y_span/2)
     u_smoot = savgol_filter(u[midplane,:], 51, 3, axis=0)
+    # u_smoot = u[midplane,:]
 
-    plt.plot(u_smoot/27)
-    plt.show()
+    plt.plot(u_smoot ,label=label)
+    # plt.show()
 
 
-u02 = np.load("u-alpha1.npy")
-# u06 = np.load("u-alpha1.npy")   
-
-# draw_quiver(u,v)
-plot_midplane(u02)
-# plot_midplane(u06)

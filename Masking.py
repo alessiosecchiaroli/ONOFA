@@ -29,7 +29,7 @@ def mask_points(img):
     mask = cv.polylines (img, [pts], isClosed=True, color=(0, 0, 0), thickness=2)
 
     # masked_frame = cv.bitwise_and (img, img, mask=mask)
-    np.save("220C",pts)
+    np.save("252C",pts)
 
     return mask #, np.array(len (points_raw))
 

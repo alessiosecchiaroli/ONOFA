@@ -128,7 +128,8 @@ def draw_DenseFlow(Image, Flow, step = 10, scale=1, color = 'red'):
     plt.show ()
 
 
-
+# WRONG!
+# the pyramid is defined through blur and not downsampling
 def horn_schunck_optical_flow(frame1, frame2, alpha=1.0, delta=1e-3, num_levels=3, max_iter=100):
 
     def warp_image(img, flow_u, flow_v):
@@ -197,15 +198,15 @@ def horn_schunck_optical_flow(frame1, frame2, alpha=1.0, delta=1e-3, num_levels=
 
 #compute magnitude in each 8 pixels. return magnitude average
 def get_magnitude(u, v):
-    scale = 3
+    scale = 1
     sum = 0.0
     counter = 0.0
 
     for i in range(0, u.shape[0], 8):
         for j in range(0, u.shape[1],8):
             counter += 1
-            dy = v[i,j] * scale
-            dx = u[i,j] * scale
+            dy = v[i,j] 
+            dx = u[i,j] 
             magnitude = (dx**2 + dy**2)**0.5
             sum += magnitude
 
@@ -216,7 +217,7 @@ def get_magnitude(u, v):
 
 
 def draw_quiver(u,v,beforeImg):
-    scale = 3
+    scale = 10
     ax = plt.figure().gca()
     ax.imshow(beforeImg, cmap = 'gray')
 
@@ -224,12 +225,12 @@ def draw_quiver(u,v,beforeImg):
 
     for i in range(0, u.shape[0], 8):
         for j in range(0, u.shape[1],8):
-            dy = v[i,j] * scale
-            dx = u[i,j] * scale
+            dy = v[i,j] 
+            dx = u[i,j] 
             magnitude = (dx**2 + dy**2)**0.5
             #draw only significant changes
             if magnitude > magnitudeAvg:
-                ax.arrow(j,i, dx, dy, color = 'red')
+                ax.arrow(j,i, dx*scale, dy*scale, color = 'red')
 
     plt.draw()
     plt.show()
