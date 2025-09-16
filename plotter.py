@@ -4,49 +4,45 @@ import cv2 as cv
 from OF_solver import draw_quiver
 from quick_plot import plot_midplane
 import os
+from scipy.signal import savgol_filter, medfilt
 
 root = os.getcwd()
-ref_img_path = os.path.join(root, './Correlable_pics/220C_ref_masked.bmp')
+ref_img_path = os.path.join(root, './Correlable_pics/BOS_8_5_1_masked.tif')
 ref_img = cv.imread(ref_img_path)
 
 # plt.imshow(ref_img)
 # plt.show()
 
-u= np.load("u_HS.npy")
-v = np.load("v_HS.npy")
-u1 = np.load("u_LK.npy")
-v1 = np.load("v_LK.npy")
 
-# u = np.load("u_sphere_mine.npy")
-# v = np.load("v_sphere_mine.npy")
-# us = np.load("u_sphere_Git.npy")
-# vs = np.load("v_sphere_Git.npy")
+u2= -1 * np.load("u_HS.npy")/25.4616
+v2 = -1 * np.load("v_HS.npy")/25.4616
 
-plot_midplane(u, 'u mine')
-# plot_midplane(v, 'v mine')
-plot_midplane(u1, 'u LK')
-# plot_midplane(v1, 'v LK')
-# plot_midplane(us, 'u Git')
-# plot_midplane(vs, 'v Git')
+
+u = cv.GaussianBlur(u2,(5,5),0)
+v2 = cv.GaussianBlur(v2,(5,5),0)
+
+
+u3 = cv.GaussianBlur(u2,(7,7),0)
+u4 = cv.GaussianBlur(u2,(11,11),0)
+u5 = cv.GaussianBlur(u2,(33,33),0)
+u6 = cv.GaussianBlur(u2,(51,51),0)
+u7 = cv.GaussianBlur(u2,(111,111),0)
+
+####
+
+plot_midplane(u2,'raw')
+plot_midplane(u,'5x5')
+plot_midplane(u3,'7x7')
+plot_midplane(u4,'11x11')
+plot_midplane(u5,'33x33')
+plot_midplane(u6,'51x51')
+plot_midplane(u7,'111x111')
+
+
+
+
+
 plt.legend()
 plt.show()
 
-# u0 = np.load("u-blur-1.00.npy")
-# u3 = np.load("u-blur-3.00.npy")
-# u5 = np.load("u-blur-5.00.npy")
-# u7 = np.load("u-blur-7.00.npy")
-# u9 = np.load("u-blur-9.00.npy")
-# u11 = np.load("u-blur-11.00.npy")
-# u13 = np.load("u-blur-13.00.npy")
-# u15 = np.load("u-blur-15.00.npy")
-
-# plot_midplane(-1* u0, 'Blur 1')
-# plot_midplane(-1 * u3, 'Blur 3')
-# plot_midplane(-1* u5, 'Blur 5')
-# plot_midplane(-1* u7, 'Blur 7')
-# plot_midplane(-1* u9, 'Blur 9')
-# plot_midplane(-1* u11, 'Blur 11')
-# plot_midplane(-1* u13, 'Blur 13')
-# plot_midplane(-1* u15, 'Blur 15')
-# plt.legend()
-# plt.show()
+# draw_quiver(u2,v2,ref_img)

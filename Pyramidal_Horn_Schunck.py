@@ -23,14 +23,12 @@ def HS_pyramidal(Image1,Image2, alpha, levels,delta=0.1,blr=5):
     Image1 = Image1.astype(np.float64) #/ 255.0
     Image2 = Image2.astype(np.float64) #/ 255.0
 
-    Image1  = cv.GaussianBlur(Image1, (blr, blr), 0)
+    Image1 = cv.GaussianBlur(Image1, (blr, blr), 0)
     Image2 = cv.GaussianBlur(Image2, (blr, blr), 0)
 
-    # dividends = []
-    # for j in range(levels):
-    #     dividends.append(2**(levels-j))
-    #     if j == levels:
-    #         dividends.append(2)
+    # If using median blur, the float type is 32
+    # Image1 = cv.medianBlur(Image1,blr)
+    # Image2 = cv.medianBlur(Image2,blr)
 
     rows, cols = map(int, Image1.shape)
 
@@ -42,9 +40,6 @@ def HS_pyramidal(Image1,Image2, alpha, levels,delta=0.1,blr=5):
         for _ in range(levels-1-i):
             Before_Img = cv.pyrDown(Before_Img) 
             After_Img = cv.pyrDown(After_Img)
-
-        # Before_Img = cv.pyrDown(Image1,dstsize=(cols // dividends[i], rows // dividends[i]))    
-        # After_Img = cv.pyrDown(Image2,dstsize=(cols // dividends[i], rows // dividends[i]))
 
         # set up initial values
         #2-D numpy array of zeros with the same shape as beforeImg
@@ -60,8 +55,6 @@ def HS_pyramidal(Image1,Image2, alpha, levels,delta=0.1,blr=5):
             u = cv.resize(u, (Before_Img.shape[1], Before_Img.shape[0]), interpolation=cv.INTER_LINEAR)
             v = cv.resize(v, (Before_Img.shape[1], Before_Img.shape[0]), interpolation=cv.INTER_LINEAR)
 
-        # u = np.zeros((beforeImg.shape[0], beforeImg.shape[1]))
-        # v = np.zeros((beforeImg.shape[0], beforeImg.shape[1]))
         fx, fy, ft = get_first_order_derivatives(Before_Img, After_Img)
     
     # # the kernel with -1 as center element is the original Laplacian kernel
@@ -69,16 +62,16 @@ def HS_pyramidal(Image1,Image2, alpha, levels,delta=0.1,blr=5):
     # # the kernel with 0 as center element helps with the convergence of the algorithm
     # # by smoothing the flow field
     
-        # avg_kernel = np.array([[1 / 12, 1 / 6, 1 / 12],
-        #                         [1 / 6, -1, 1 / 6],
-        #                         [1 / 12, 1 / 6, 1 / 12]], float)
         avg_kernel = np.array([[1 / 12, 1 / 6, 1 / 12],
-                                [1 / 6, 0, 1 / 6],
+                                [1 / 6, -1, 1 / 6],
                                 [1 / 12, 1 / 6, 1 / 12]], float)
+        # avg_kernel = np.array([[1 / 12, 1 / 6, 1 / 12],
+        #                         [1 / 6, 0, 1 / 6],
+        #                         [1 / 12, 1 / 6, 1 / 12]], float)
 
         
         iter_counter = 0
-    
+
         while True:
             iter_counter += 1
             u_avg = convolve(u, avg_kernel)
@@ -88,9 +81,9 @@ def HS_pyramidal(Image1,Image2, alpha, levels,delta=0.1,blr=5):
         #optical flow implementation
             p = (fx * u_avg) + (fy * v_avg) + ft 
             # # if using the original kernel, use this line
-            # d = alpha**2 + fx**2 + fy**2
+            d = alpha**2 + fx**2 + fy**2
             # # if using the smoothing kernel, use this line instead      
-            d = 4 * alpha**2 + fx**2 + fy**2
+            # d = 4 * alpha**2 + fx**2 + fy**2
 
             previous = u.copy()
 
@@ -103,10 +96,27 @@ def HS_pyramidal(Image1,Image2, alpha, levels,delta=0.1,blr=5):
 
 
             diff = np.linalg.norm(u - previous, 2)
-            #converges check (at most 300 iterations)
-            if  diff < delta or iter_counter > 300:
-                # print("iteration number: ", iter_counter)
-                break
+
+
+            if  diff < delta:
+                print("diff: ", diff)
+                
+                if i == levels:
+                    break
+
+                else:
+                    # apply a 5x5 blur in intermediate steps (from Cakir paper)
+                    u = u.astype(np.float32) # required for median blur
+                    v = v.astype(np.float32) # required for median blur
+                    u = cv.medianBlur(u,5)
+                    v = cv.medianBlur(v,5)
+
+                    break
+            elif iter_counter > 10000:            
+                # convergence error (at most 10000 iterations)
+                print('diff',diff)
+                raise TypeError("Pyramidal level ",i ," failed to converge")
+
 
 
     return [u, v]
