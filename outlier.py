@@ -6,8 +6,10 @@ def normres(U, V, Thr, b=1, eps=0.1):
 
     Simply translated the original code from J. Westerweel and F. Scarano
     From Matlab into python.
+    Check the paper for more info.
 
-    Check their paper for more info :)
+    DOI 10.1007/s00348-005-0016-6
+   
 
     Parameters
     ----------

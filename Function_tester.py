@@ -2,10 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt 
 import cv2 
 from Pyramidal_Horn_Schunck import HS_pyramidal
-from OF_solver import draw_OF_HS
+from OF_plot import draw_OF_HS
 import os
 from video_maker import video_maker
-from OF_solver import draw_quiver
+from OF_plot import draw_quiver
 
 '''
     This is a test script to validate the Pyramidal Horn-Schunck Optical Flow algorithm.

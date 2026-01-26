@@ -3,7 +3,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 from Pre_processing import standard_pre
-from OF_solver import *
+from OF_plot import *
 from Pyramidal_Horn_Schunck import HS_pyramidal
 from scipy.ndimage.filters import convolve as filter2
 

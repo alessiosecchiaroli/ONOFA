@@ -18,11 +18,13 @@ def standard_pre(img,scale_factor):
     # equalize the histogram to improve contrast
     img = cv.resize (img, (widthScale, heightScale), interpolation=cv.INTER_LINEAR)
     img = cv.cvtColor (img, cv.COLOR_BGR2GRAY)
-    # image_processed = cv.equalizeHist (img)
+    image_processed = cv.equalizeHist (img)
 
     # # Preprocess with CLAHE to normalize lighting
-    clahe = cv.createCLAHE(clipLimit=40) #ileGridSize=(8, 8))
-    image_processed = clahe.apply(img)
+    # # More info about CLAHE here: https://docs.opencv.org/3.4/d5/daf/tutorial_py_histogram_equalization.html
+    
+    # clahe = cv.createCLAHE(clipLimit=40) #ileGridSize=(8, 8))
+    # image_processed = clahe.apply(img)
 
     # plotting for debugging, it works :)
     # plt.imshow (image_processed, cmap='gray')

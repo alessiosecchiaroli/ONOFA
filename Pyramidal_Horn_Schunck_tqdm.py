@@ -2,10 +2,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2 as cv
 from scipy.ndimage import convolve
+from tqdm import tqdm
+
+'''
+This version of the Pyramidal Horn Schunck optical flow algorithm includes a progress bar
+It's exactly the same as Pyramidal_Horn_Schunck_v1.py but with tqdm added to the while loop
+'''
 
 def get_first_order_derivatives(img1, img2):
     #derivative masks
-    #Opted Kernal convolution to efficiently implement Fourier transformations
+    #Opted Kernel convolution to efficiently implement Fourier transformations
     x_kernel = np.array([[-1, 1], [-1, 1]]) * 0.25
     y_kernel = np.array([[-1, -1], [1, 1]]) * 0.25
     t_kernel = np.ones((2, 2)) * 0.25
@@ -20,13 +26,14 @@ def get_first_order_derivatives(img1, img2):
 
 def HS_pyramidal(Image1,Image2, alpha, levels,delta=0.1,blr=5):
 
-    Image1 = Image1.astype(np.float64) #/ 255.0
-    Image2 = Image2.astype(np.float64) #/ 255.0
-
+    Image1 = Image1.astype(np.float64) 
+    Image2 = Image2.astype(np.float64) 
     Image1 = cv.GaussianBlur(Image1, (blr, blr), 0)
     Image2 = cv.GaussianBlur(Image2, (blr, blr), 0)
 
     # If using median blur, the float type is 32
+    # Image1 = Image1.astype(np.float32) 
+    # Image2 = Image2.astype(np.float32) 
     # Image1 = cv.medianBlur(Image1,blr)
     # Image2 = cv.medianBlur(Image2,blr)
 
@@ -42,7 +49,7 @@ def HS_pyramidal(Image1,Image2, alpha, levels,delta=0.1,blr=5):
             After_Img = cv.pyrDown(After_Img)
 
         # set up initial values
-        #2-D numpy array of zeros with the same shape as beforeImg
+        # 2-D numpy array of zeros with the same shape as beforeImg
 
         if i == 0:
             u = np.zeros((Before_Img.shape[0], Before_Img.shape[1]))
@@ -57,11 +64,12 @@ def HS_pyramidal(Image1,Image2, alpha, levels,delta=0.1,blr=5):
 
         fx, fy, ft = get_first_order_derivatives(Before_Img, After_Img)
     
-    # # the kernel with -1 as center element is the original Laplacian kernel
-    # # suggested by Horn and Schunck in 1981
-    # # the kernel with 0 as center element helps with the convergence of the algorithm
-    # # by smoothing the flow field
     
+    # # The kernel with -1 as center element is the original Laplacian kernel suggested by Horn and Schunck in 1981
+    
+    # # The kernel with 0 as center element helps with the convergence of the algorithm by smoothing the flow field
+ 
+
         # avg_kernel = np.array([[1 / 12, 1 / 6, 1 / 12],
         #                         [1 / 6, -1, 1 / 6],
         #                         [1 / 12, 1 / 6, 1 / 12]], float)
@@ -71,6 +79,8 @@ def HS_pyramidal(Image1,Image2, alpha, levels,delta=0.1,blr=5):
 
         
         iter_counter = 0
+        n = 20000
+        pbar = tqdm(desc='while loop', total = n)
 
         while True:
             iter_counter += 1
@@ -79,9 +89,11 @@ def HS_pyramidal(Image1,Image2, alpha, levels,delta=0.1,blr=5):
 
 
         #optical flow implementation
-            p = (fx * u_avg) + (fy * v_avg) + ft 
+            p = (fx*u_avg) + (fy*v_avg) + ft 
             # # if using the original kernel, use this line
             # d = alpha**2 + fx**2 + fy**2
+            # # some people use this line with the smoothing kernel
+            # d = alpha + fx**2 + fy**2
             # # if using the smoothing kernel, use this line instead      
             d = 4 * alpha**2 + fx**2 + fy**2
 
@@ -93,35 +105,34 @@ def HS_pyramidal(Image1,Image2, alpha, levels,delta=0.1,blr=5):
             if not np.isfinite(u).all():
                 print("Non-finite values in flow field — instability detected")
                 break
-
+            
+            # if i != levels - 1:
+            #     u = u.astype(np.float32) # required for median blur
+            #     v = v.astype(np.float32) # required for median blur
+            #     u = cv.medianBlur(u,5)
+            #     v = cv.medianBlur(v,5)`
+            # `
             u = u.astype(np.float32) # required for median blur
             v = v.astype(np.float32) # required for median blur
             u = cv.medianBlur(u,5)
             v = cv.medianBlur(v,5)
+            diff = np.linalg.norm(u - previous)
 
-            diff = np.linalg.norm(u - previous, 2)
+            pbar.update(1)
+            pbar.set_postfix({"diff": f"{diff:.4f}"})
 
 
             if  diff < delta:
-                print("diff: ", diff)
+                # print("diff: ", diff)
+                tqdm.write(f"diff: {diff}")
                 break
 
-                # if i == levels:
-                #     break
-
-                # else:
-                #     # apply a 5x5 blur in intermediate steps (from Cakir paper)
-                #     # u = u.astype(np.float32) # required for median blur
-                #     # v = v.astype(np.float32) # required for median blur
-                #     # u = cv.medianBlur(u,5)
-                #     # v = cv.medianBlur(v,5)
-
-                #     break
-            elif iter_counter > 10000:            
+            elif iter_counter > 20000:            
                 # convergence error (at most 10000 iterations)
-                print('diff:',diff)
+                # print('diff:',diff)
+                tqdm.write(f"diff: {diff}")
                 raise TypeError("Pyramidal level ",i ," failed to converge")
 
-
+        pbar.close()
 
     return [u, v]

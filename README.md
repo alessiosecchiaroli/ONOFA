@@ -13,9 +13,7 @@ It overlap the two frames, to correct for the rigid shift of the nozzle between 
 Main: 
 After the nozzle shape in the frame is overlapped, a mask is generated, and finally the optical flow algortihm is used to obtain the displacement.
 
-Main v1:
-A background subtraction technique is used in order to try generating an algorithmic mask.
-Finally the optical flow algorithm is used to obtain the displacement.
+The most important functions are the directly called by Main.py, the other files contain things which are not directly relevant to calculating the Optical Flow.
 
 
 

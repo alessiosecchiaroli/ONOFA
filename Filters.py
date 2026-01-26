@@ -58,7 +58,7 @@ def match_background_intensity_gray(reference_image, target_image, background_ma
 
 # # Create a mask for the background region
 # # For example, assuming the background is a specific color or can be segmented
-# # Here, we create a dummy mask; replace this with your actual background mask
+# # Here, dummy mask is created; replace it with the actual background mask
 # background_mask = np.ones (reference_image.shape[:2], dtype=bool)
 #
 # # Adjust the target image to match the reference image's background intensity
